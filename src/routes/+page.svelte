@@ -384,6 +384,31 @@
     void selectModule(activeModule);
   }
 
+  async function testBack4appConnection() {
+    if (!back4appReady) {
+      syncMessage = '⚠️ 請先填入完整的 Back4app 設定（Endpoint、Application ID、Master Key）';
+      return;
+    }
+
+    syncMessage = '正在測試連線...';
+    try {
+      // 嘗試讀取一個 Class（使用當前模組的 Class）
+      const response = await fetch(`${back4appUrl(activeModule)}?limit=1`, {
+        headers: back4appHeaders()
+      });
+      const data = await response.json();
+      
+      if (!response.ok) {
+        syncMessage = `❌ 連線失敗：${data.error || data.message || '未知錯誤'}`;
+        return;
+      }
+
+      syncMessage = `✅ 連線成功！已連接到 Back4app，Class: ${getClassName(activeModule)}`;
+    } catch (error) {
+      syncMessage = `❌ 連線錯誤：${error instanceof Error ? error.message : '網路錯誤或設定不正確'}`;
+    }
+  }
+
   function getClassName(module: ModuleConfig) {
     const map: Record<string, string> = {
       subscription: 'FengbroSubscription',
@@ -855,6 +880,7 @@
         </div>
         <div class="form-actions">
           <button class="primary" type="button" on:click={saveBack4appConfig}>儲存並重新連線</button>
+          <button class="secondary" type="button" on:click={testBack4appConnection}>測試連線</button>
           <button
             class="ghost"
             type="button"
