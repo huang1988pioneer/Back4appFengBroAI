@@ -14,6 +14,12 @@ SvelteKit 版鋒兄工作台，參考 `goldshoot0720/fengbroaiappwrite` 的模�
 - 鋒兄工具：鋒兄比價、手機比價、鋒兄Tube、鋒兄金融
 - 鋒兄設定、鋒兄關於
 
+## 架構說明
+
+- **後端資料庫**：Back4app (Parse Server)
+- **前端部署**：支援 Vercel 或 Cloudflare Pages
+- **備援機制**：未設定 Back4app 時自動使用瀏覽器 localStorage
+
 ## Back4app
 
 頁面右上角點選「設定 Back4app」，填入：
@@ -33,23 +39,41 @@ npm run dev
 
 CSV 匯入會依照標題列對應欄位；匯出會輸出 UTF-8 BOM CSV，方便 Excel 開啟。
 
-## Back4app / Cloudflare Pages 部署
+## 部署到 Vercel
 
-這個專案已改為輸出靜態站到 `build/`。
+### 方式一：通過 Vercel Dashboard（推薦）
 
-### Back4app 設定
+1. 前往 [Vercel](https://vercel.com)
+2. 點擊 "Import Project"
+3. 連接你的 GitHub 倉庫
+4. Vercel 會自動檢測為 SvelteKit 專案並使用正確的設定
 
-在 Back4app Workers & Pages 的設定中：
+### 方式二：使用 Vercel CLI
 
-- **Build command**: `npm run build`
-- **Deploy command**: `npx wrangler deploy --assets build`
-- **Root directory**: `/`
+```bash
+npm install -g vercel
+npm run build
+vercel --prod
+```
 
-### 本地部署
+**注意**：Vercel 會自動讀取 `vercel.json` 和 `.node-version` 配置。
+
+## 部署到 Cloudflare Pages
+
+### 方式一：通過 Cloudflare Dashboard
+
+1. 前往 [Cloudflare Pages](https://pages.cloudflare.com)
+2. 連接你的 GitHub 倉庫
+3. 設定構建配置：
+   - **Build command**: `npm run build`
+   - **Build output directory**: `build`
+   - **Root directory**: `/`
+
+### 方式二：使用 Wrangler CLI
 
 ```bash
 npm run build
-npx wrangler deploy --assets build
+npx wrangler pages deploy build --project-name=back4appfengbroai
 ```
 
-注意：必須使用 `--assets build` 參數來指定靜態資源目錄。
+**注意**：Cloudflare Pages 會自動複製 `static/_redirects` 到構建輸出目錄，實現 SPA 路由。

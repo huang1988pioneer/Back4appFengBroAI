@@ -1,7 +1,5 @@
 name = "back4appfengbroai"
 compatibility_date = "2026-06-11"
 
-# 靜態資源部署配置
-[assets]
-directory = "build"
-not_found_handling = "single-page-application"
+# Cloudflare Pages 配置
+# 使用命令：npx wrangler pages deploy build --project-name=back4appfengbroai
