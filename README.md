@@ -16,7 +16,7 @@ SvelteKit 版鋒兄工作台，參考 `goldshoot0720/fengbroaiappwrite` 的模�
 ## 架構說明
 
 - **後端資料庫**：Back4app (Parse Server)
-- **前端部署**：支援 Vercel 或 Cloudflare Pages
+- **前端部署**：支援 Vercel、Cloudflare Pages、或 Back4app Workers & Pages
 - **備援機制**：未設定 Back4app 時自動使用瀏覽器 localStorage
 
 ## Back4app
@@ -76,3 +76,17 @@ npx wrangler pages deploy build --project-name=back4appfengbroai
 ```
 
 **注意**：Cloudflare Pages 會自動複製 `static/_redirects` 到構建輸出目錄，實現 SPA 路由。
+
+## 部署到 Back4app Workers & Pages
+
+### 通過 Back4app Dashboard
+
+1. 前往 [Back4app Workers & Pages](https://dashboard.back4app.com)
+2. 連接你的 GitHub 倉庫
+3. 設定構建配置：
+   - **Build command**: `npm run build`
+   - **Deploy command**: `npx wrangler deploy --assets build`
+   - **Root directory**: `/`
+   - **Node version**: 20（自動從 `.node-version` 讀取）
+
+**重要**：部署命令必須包含 `--assets build` 參數，告訴 Wrangler 要部署靜態資源。
