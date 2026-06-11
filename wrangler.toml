@@ -1,7 +1,7 @@
 name = "back4appfengbroai"
 compatibility_date = "2026-06-11"
 
-# Cloudflare Pages 靜態資源配置
+# Cloudflare Pages static build output.
 [assets]
 directory = "build"
 not_found_handling = "single-page-application"
