@@ -32,3 +32,24 @@ npm run dev
 ```
 
 CSV 匯入會依照標題列對應欄位；匯出會輸出 UTF-8 BOM CSV，方便 Excel 開啟。
+
+## Back4app / Cloudflare Pages 部署
+
+這個專案已改為輸出靜態站到 `build/`。
+
+### Back4app 設定
+
+在 Back4app Workers & Pages 的設定中：
+
+- **Build command**: `npm run build`
+- **Deploy command**: `npx wrangler deploy --assets build`
+- **Root directory**: `/`
+
+### 本地部署
+
+```bash
+npm run build
+npx wrangler deploy --assets build
+```
+
+注意：必須使用 `--assets build` 參數來指定靜態資源目錄。

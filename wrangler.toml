@@ -1,3 +1,7 @@
 name = "back4appfengbroai"
 compatibility_date = "2026-06-11"
-pages_build_output_dir = "build"
+
+# 靜態資源部署配置
+[assets]
+directory = "build"
+not_found_handling = "single-page-application"
