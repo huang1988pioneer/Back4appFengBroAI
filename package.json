@@ -1,0 +1,22 @@
+{
+  "name": "back4app-fengbro-ai-sveltekit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@sveltejs/adapter-auto": "3.3.1",
+    "@sveltejs/kit": "2.22.0",
+    "svelte": "5.34.3",
+    "vite": "6.3.5"
+  },
+  "devDependencies": {
+    "svelte-check": "4.2.1",
+    "typescript": "5.8.3"
+  }
+}
