@@ -324,11 +324,36 @@
 
   $: back4appReady = Boolean(dbConfig.endpoint && dbConfig.appId && dbConfig.masterKey);
 
-  $: filteredRecords = records.filter((item) => {
-    const needle = query.trim().toLowerCase();
-    if (!needle) return true;
-    return activeModule.fields.some((field) => String(item[field.key] ?? '').toLowerCase().includes(needle));
-  });
+  $: filteredRecords = records
+    .filter((item) => {
+      const needle = query.trim().toLowerCase();
+      if (!needle) return true;
+      return activeModule.fields.some((field) => String(item[field.key] ?? '').toLowerCase().includes(needle));
+    })
+    .sort((a, b) => {
+      // 根據不同模組的日期欄位排序（從近到遠）
+      let dateKey = '';
+      if (activeModule.id === 'subscription') dateKey = 'nextdate';
+      else if (activeModule.id === 'food') dateKey = 'todate';
+      else if (activeModule.id === 'routine') dateKey = 'lastdate1';
+      else if (activeModule.id === 'article') dateKey = 'newDate';
+      else if (activeModule.id === 'about') dateKey = 'updatedAt';
+
+      if (dateKey) {
+        const dateA = new Date(String(a[dateKey] ?? '')).getTime();
+        const dateB = new Date(String(b[dateKey] ?? '')).getTime();
+        
+        // 處理無效日期（放到最後）
+        if (Number.isNaN(dateA) && Number.isNaN(dateB)) return 0;
+        if (Number.isNaN(dateA)) return 1;
+        if (Number.isNaN(dateB)) return -1;
+        
+        // 從近到遠排序
+        return dateA - dateB;
+      }
+
+      return 0;
+    });
 
   $: totalAmount = records.reduce((sum, item) => {
     const price = Number(item.price ?? item.deposit ?? 0);
