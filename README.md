@@ -25,7 +25,7 @@ SvelteKit 版鋒兄工作台，參考 `goldshoot0720/fengbroaiappwrite` 的模�
 
 - Parse Endpoint，預設 `https://parseapi.back4app.com`
 - Application ID
-- REST API Key
+- Master Key
 
 設定完整後，CRUD 與 CSV 匯入會寫入 Back4app Parse Class。若未設定，會自動使用瀏覽器 `localStorage` 備援。
 

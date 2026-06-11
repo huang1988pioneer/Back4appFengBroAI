@@ -29,14 +29,14 @@
   type Back4appConfig = {
     endpoint: string;
     appId: string;
-    restKey: string;
+    masterKey: string;
   };
 
   const BACK4APP_CONFIG_KEY = 'fengbro.back4app.config';
   const defaultBack4appConfig: Back4appConfig = {
     endpoint: 'https://parseapi.back4app.com',
     appId: '',
-    restKey: ''
+    masterKey: ''
   };
 
   const modules: ModuleConfig[] = [
@@ -322,7 +322,7 @@
   let syncMessage = '';
   let loadingRecords = false;
 
-  $: back4appReady = Boolean(dbConfig.endpoint && dbConfig.appId && dbConfig.restKey);
+  $: back4appReady = Boolean(dbConfig.endpoint && dbConfig.appId && dbConfig.masterKey);
 
   $: filteredRecords = records.filter((item) => {
     const needle = query.trim().toLowerCase();
@@ -408,7 +408,7 @@
     return {
       'Content-Type': 'application/json',
       'X-Parse-Application-Id': dbConfig.appId,
-      'X-Parse-REST-API-Key': dbConfig.restKey
+      'X-Parse-Master-Key': dbConfig.masterKey
     };
   }
 
@@ -849,8 +849,8 @@
             <input bind:value={dbConfig.appId} placeholder="Back4app Application ID" />
           </label>
           <label>
-            <span>REST API Key</span>
-            <input bind:value={dbConfig.restKey} type="password" placeholder="Back4app REST API Key" />
+            <span>Master Key</span>
+            <input bind:value={dbConfig.masterKey} type="password" placeholder="Back4app Master Key" />
           </label>
         </div>
         <div class="form-actions">
