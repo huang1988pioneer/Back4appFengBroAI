@@ -409,6 +409,60 @@
     }
   }
 
+  async function initializeBack4appTables() {
+    if (!back4appReady) {
+      syncMessage = '⚠️ 請先填入完整的 Back4app 設定並測試連線成功';
+      return;
+    }
+
+    if (!confirm('確定要初始化所有資料表嗎？\n\n這會為每個模組創建對應的 Back4app Class（如果不存在）。')) {
+      return;
+    }
+
+    syncMessage = '正在初始化資料表...';
+    let successCount = 0;
+    let skipCount = 0;
+    const results: string[] = [];
+
+    for (const module of modules) {
+      const className = getClassName(module);
+      try {
+        // 嘗試創建一筆測試資料來觸發 Class 創建
+        const testRecord = createBlankRecord(module);
+        const payload = toBack4appObject(module, testRecord);
+        
+        const response = await fetch(back4appUrl(module), {
+          method: 'POST',
+          headers: back4appHeaders(),
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // 創建成功，立即刪除測試資料
+          const objectId = data.objectId;
+          await fetch(back4appUrl(module, objectId), {
+            method: 'DELETE',
+            headers: back4appHeaders()
+          });
+          successCount++;
+          results.push(`✅ ${className}`);
+        } else if (response.status === 400 || response.status === 404) {
+          // Class 可能已存在
+          skipCount++;
+          results.push(`⚠️ ${className} (可能已存在)`);
+        } else {
+          results.push(`❌ ${className}: ${data.error || '未知錯誤'}`);
+        }
+      } catch (error) {
+        results.push(`❌ ${className}: ${error instanceof Error ? error.message : '創建失敗'}`);
+      }
+    }
+
+    syncMessage = `初始化完成！\n成功: ${successCount} 個\n跳過: ${skipCount} 個\n\n${results.join('\n')}`;
+  }
+
   function getClassName(module: ModuleConfig) {
     const map: Record<string, string> = {
       subscription: 'FengbroSubscription',
@@ -881,6 +935,7 @@
         <div class="form-actions">
           <button class="primary" type="button" on:click={saveBack4appConfig}>儲存並重新連線</button>
           <button class="secondary" type="button" on:click={testBack4appConnection}>測試連線</button>
+          <button class="secondary" type="button" on:click={initializeBack4appTables}>初始化資料表</button>
           <button
             class="ghost"
             type="button"
@@ -919,7 +974,7 @@
     </section>
 
     {#if syncMessage}
-      <p class="notice">{syncMessage}</p>
+      <pre class="notice">{syncMessage}</pre>
     {/if}
 
     {#if loadingRecords}
