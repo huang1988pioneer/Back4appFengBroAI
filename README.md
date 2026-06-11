@@ -75,7 +75,7 @@ npm run build
 npx wrangler pages deploy build --project-name=back4appfengbroai
 ```
 
-**注意**：Cloudflare Pages 會自動複製 `static/_redirects` 到構建輸出目錄，實現 SPA 路由。
+**注意**：Cloudflare Pages 使用 `wrangler.toml` 中的 `not_found_handling = "single-page-application"` 設定來處理 SPA 路由。
 
 ## 部署到 Back4app Workers & Pages
 
