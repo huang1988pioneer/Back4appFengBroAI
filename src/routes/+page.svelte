@@ -333,13 +333,26 @@
       return activeModule.fields.some((field) => String(item[field.key] ?? '').toLowerCase().includes(needle));
     })
     .sort((a, b) => {
-      // 根據不同模組的日期欄位排序（從近到遠）
+      // 根據不同模組的日期欄位排序
       let dateKey = '';
-      if (activeModule.id === 'subscription') dateKey = 'nextdate';
-      else if (activeModule.id === 'food') dateKey = 'todate';
-      else if (activeModule.id === 'routine') dateKey = 'lastdate1';
-      else if (activeModule.id === 'article') dateKey = 'newDate';
-      else if (activeModule.id === 'about') dateKey = 'updatedAt';
+      let sortOrder: 'asc' | 'desc' = 'asc'; // asc: 從早到晚, desc: 從晚到早
+      
+      if (activeModule.id === 'subscription') {
+        dateKey = 'nextdate';
+        sortOrder = 'asc'; // 最快到期的在前
+      } else if (activeModule.id === 'food') {
+        dateKey = 'todate';
+        sortOrder = 'asc'; // 最快過期的在前
+      } else if (activeModule.id === 'routine') {
+        dateKey = 'lastdate1';
+        sortOrder = 'desc'; // 最近執行的在前
+      } else if (activeModule.id === 'article') {
+        dateKey = 'newDate';
+        sortOrder = 'desc'; // 最新的筆記在前
+      } else if (activeModule.id === 'about') {
+        dateKey = 'updatedAt';
+        sortOrder = 'desc'; // 最近更新的在前
+      }
 
       if (dateKey) {
         const dateA = new Date(String(a[dateKey] ?? '')).getTime();
@@ -350,8 +363,8 @@
         if (Number.isNaN(dateA)) return 1;
         if (Number.isNaN(dateB)) return -1;
         
-        // 從近到遠排序
-        return dateA - dateB;
+        // 根據排序順序返回
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       }
 
       return 0;
