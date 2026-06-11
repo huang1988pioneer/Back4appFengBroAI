@@ -19,7 +19,32 @@ SvelteKit 版鋒兄工作台，參考 `goldshoot0720/fengbroaiappwrite` 的模�
 - **前端部署**：支援 Vercel、Cloudflare Pages、或 Back4app Workers & Pages
 - **備援機制**：未設定 Back4app 時自動使用瀏覽器 localStorage
 
-## Back4app
+## Back4app 資料庫設定
+
+### 方式一：環境變數（推薦用於部署）
+
+複製 `.env.example` 為 `.env` 並填入你的 Back4app 設定：
+
+```bash
+cp .env.example .env
+```
+
+編輯 `.env` 文件：
+
+```env
+VITE_BACK4APP_ENDPOINT=https://parseapi.back4app.com
+VITE_BACK4APP_APP_ID=你的_Application_ID
+VITE_BACK4APP_MASTER_KEY=你的_Master_Key
+```
+
+**Back4app Workers & Pages 部署**：在 Back4app Dashboard 的 Settings > Build environment variable 中設定：
+- `VITE_BACK4APP_ENDPOINT`
+- `VITE_BACK4APP_APP_ID`
+- `VITE_BACK4APP_MASTER_KEY`
+
+**Vercel 部署**：在 Vercel Dashboard 的 Settings > Environment Variables 中設定相同的變數。
+
+### 方式二：網頁設定頁面
 
 頁面右上角點選「設定 Back4app」，填入：
 

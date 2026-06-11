@@ -33,10 +33,12 @@
   };
 
   const BACK4APP_CONFIG_KEY = 'fengbro.back4app.config';
+  
+  // 從環境變數讀取預設值（構建時注入）
   const defaultBack4appConfig: Back4appConfig = {
-    endpoint: 'https://parseapi.back4app.com',
-    appId: '',
-    masterKey: ''
+    endpoint: import.meta.env.VITE_BACK4APP_ENDPOINT || 'https://parseapi.back4app.com',
+    appId: import.meta.env.VITE_BACK4APP_APP_ID || '',
+    masterKey: import.meta.env.VITE_BACK4APP_MASTER_KEY || ''
   };
 
   const modules: ModuleConfig[] = [
