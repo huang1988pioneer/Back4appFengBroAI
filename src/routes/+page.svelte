@@ -39,8 +39,7 @@
   let dbConfig: Back4appConfig = { ...defaultBack4appConfig };
   let mode: RepositoryMode = 'localStorage';
 
-  $: repository = new FengbroRepository(activeModule, dbConfig);
-  $: mode = repository.mode;
+  $: mode = getRepository(activeModule).mode;
   $: filteredRecords = sortRecords(
     activeModule,
     records.filter((item) => {
@@ -60,26 +59,37 @@
     void selectModule(activeModule);
   });
 
+  function getRepository(module: ModuleConfig) {
+    return new FengbroRepository(module, dbConfig);
+  }
+
   async function selectModule(module: ModuleConfig) {
     activeModule = module;
     form = createBlankRecord(module);
     editingId = '';
     query = '';
     importMessage = '';
-    await loadRecords();
+    await loadRecords(module);
   }
 
-  async function loadRecords() {
+  async function loadRecords(module = activeModule) {
     loadingRecords = true;
     syncMessage = '';
+    const activeRepository = getRepository(module);
+    const activeMode = activeRepository.mode;
+
     try {
-      records = await repository.list();
-      syncMessage = `${mode === 'back4app' ? 'Back4app' : 'localStorage'} 已載入：${activeModule.className} / ${records.length} 筆`;
+      const nextRecords = await activeRepository.list();
+      if (activeModule.id !== module.id) return;
+      records = nextRecords;
+      syncMessage = `${activeMode === 'back4app' ? 'Back4app' : 'localStorage'} 已載入：${module.className} / ${records.length} 筆`;
     } catch (error) {
-      records = [];
-      syncMessage = error instanceof Error ? error.message : '讀取資料失敗';
+      if (activeModule.id === module.id) {
+        records = [];
+        syncMessage = error instanceof Error ? error.message : '讀取資料失敗';
+      }
     } finally {
-      loadingRecords = false;
+      if (activeModule.id === module.id) loadingRecords = false;
     }
   }
 
@@ -89,12 +99,15 @@
   }
 
   async function submitRecord() {
-    const cleaned = normalizeRecord(activeModule, form);
+    const module = activeModule;
+    const activeRepository = getRepository(module);
+    const cleaned = normalizeRecord(module, form);
+
     try {
-      if (editingId) await repository.update(editingId, cleaned);
-      else await repository.create(cleaned);
+      if (editingId) await activeRepository.update(editingId, cleaned);
+      else await activeRepository.create(cleaned);
       cancelEdit();
-      await loadRecords();
+      await loadRecords(module);
     } catch (error) {
       syncMessage = error instanceof Error ? error.message : '儲存失敗';
     }
@@ -107,39 +120,42 @@
   }
 
   async function duplicateRecord(item: RecordItem) {
+    const module = activeModule;
     const copy: RecordItem = { ...item, id: '' };
-    const label = primaryValue(activeModule, item);
-    if (label) copy[primaryField(activeModule).key] = `${label} (複製)`;
+    const label = primaryValue(module, item);
+    if (label) copy[primaryField(module).key] = `${label} (複製)`;
 
     try {
-      await repository.create(normalizeRecord(activeModule, copy));
-      await loadRecords();
+      await getRepository(module).create(normalizeRecord(module, copy));
+      await loadRecords(module);
     } catch (error) {
       syncMessage = error instanceof Error ? error.message : '複製失敗';
     }
   }
 
   async function deleteRecord(item: RecordItem) {
-    const label = primaryValue(activeModule, item) || '這筆資料';
+    const module = activeModule;
+    const label = primaryValue(module, item) || '這筆資料';
     if (!confirm(`刪除「${label}」？`)) return;
 
     try {
-      await repository.delete(item.id);
-      await loadRecords();
+      await getRepository(module).delete(item.id);
+      await loadRecords(module);
     } catch (error) {
       syncMessage = error instanceof Error ? error.message : '刪除失敗';
     }
   }
 
   async function adjustAmount(item: RecordItem, delta: number) {
-    const updated = normalizeRecord(activeModule, {
+    const module = activeModule;
+    const updated = normalizeRecord(module, {
       ...item,
       amount: Math.max(0, Number(item.amount || 0) + delta)
     });
 
     try {
-      await repository.update(item.id, updated);
-      await loadRecords();
+      await getRepository(module).update(item.id, updated);
+      await loadRecords(module);
     } catch (error) {
       syncMessage = error instanceof Error ? error.message : '庫存更新失敗';
     }
@@ -150,13 +166,15 @@
     const file = input.files?.[0];
     if (!file) return;
 
-    const imported = recordsFromCsv(activeModule, await file.text());
+    const module = activeModule;
+    const activeRepository = getRepository(module);
+    const imported = recordsFromCsv(module, await file.text());
     let success = 0;
     for (const item of imported) {
-      await repository.create(item);
+      await activeRepository.create(item);
       success += 1;
     }
-    await loadRecords();
+    await loadRecords(module);
     importMessage = `已匯入 ${success}/${imported.length} 筆：${file.name}`;
     input.value = '';
   }
@@ -172,25 +190,31 @@
   }
 
   async function resetSeed() {
-    if (!confirm(`重置「${activeModule.title}」為範例資料？`)) return;
-    if (mode === 'back4app') {
-      for (const item of normalizeSeed(activeModule)) await repository.create(item);
+    const module = activeModule;
+    if (!confirm(`重置「${module.title}」為範例資料？`)) return;
+
+    const activeRepository = getRepository(module);
+    if (activeRepository.mode === 'back4app') {
+      for (const item of normalizeSeed(module)) await activeRepository.create(item);
     } else {
-      await repository.replaceLocal(normalizeSeed(activeModule));
+      await activeRepository.replaceLocal(normalizeSeed(module));
     }
-    await loadRecords();
+    await loadRecords(module);
   }
 
   async function clearModule() {
-    if (!confirm(`清空「${activeModule.title}」全部資料？`)) return;
-    for (const item of records) await repository.delete(item.id);
-    await loadRecords();
+    const module = activeModule;
+    if (!confirm(`清空「${module.title}」全部資料？`)) return;
+
+    const activeRepository = getRepository(module);
+    for (const item of records) await activeRepository.delete(item.id);
+    await loadRecords(module);
   }
 
   function saveDatabaseConfig() {
     saveBack4appConfig(dbConfig);
     syncMessage = isBack4appReady(dbConfig) ? 'Back4app 設定已儲存。' : 'Back4app 設定未完整，暫時使用 localStorage。';
-    void loadRecords();
+    void loadRecords(activeModule);
   }
 
   async function testDatabaseConnection() {
@@ -200,7 +224,7 @@
     }
 
     try {
-      await repository.testConnection();
+      await getRepository(activeModule).testConnection();
       syncMessage = `Back4app 連線成功：${activeModule.className}`;
     } catch (error) {
       syncMessage = error instanceof Error ? error.message : 'Back4app 連線失敗';
