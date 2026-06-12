@@ -6,6 +6,7 @@
   import RecordList from '$lib/components/RecordList.svelte';
   import StatsRow from '$lib/components/StatsRow.svelte';
   import ToolPanel from '$lib/components/ToolPanel.svelte';
+  import type { ToolTab } from '$lib/components/ToolPanel.svelte';
   import { csvFilename, recordsFromCsv, recordsToCsv } from '$lib/csv';
   import { modules } from '$lib/modules';
   import {
@@ -32,7 +33,7 @@
   let query = '';
   let importMessage = '';
   let syncMessage = '';
-  let toolTab = 'price';
+  let toolTab: ToolTab = 'price';
   let dbPanelOpen = false;
   let loadingRecords = false;
   let dbConfig: Back4appConfig = { ...defaultBack4appConfig };
