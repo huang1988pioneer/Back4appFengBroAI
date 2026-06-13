@@ -26,6 +26,9 @@
   } from '$lib/storage';
   import type { Back4appConfig, ModuleConfig, RecordItem, RepositoryMode } from '$lib/types';
 
+  const hiddenMenuIds = new Set(['image', 'video', 'music', 'document', 'podcast']);
+  const menuModules = modules.filter((module) => !hiddenMenuIds.has(module.id));
+
   let activeModule = modules[0];
   let records: RecordItem[] = [];
   let form: RecordItem = createBlankRecord(activeModule);
@@ -242,7 +245,7 @@
 </svelte:head>
 
 <main class="app-shell">
-  <ModuleNav {modules} {activeModule} onSelect={selectModule} />
+  <ModuleNav modules={menuModules} {activeModule} onSelect={selectModule} />
 
   <section class="workspace">
     <header class="topbar">
