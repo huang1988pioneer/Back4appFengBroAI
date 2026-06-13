@@ -52,17 +52,36 @@
     updatedAt: string;
   };
 
-  const STORAGE_KEY = 'fengbro.tools.workspace.v2';
+  const STORAGE_KEY = 'fengbro.tools.workspace.v3';
 
   export let toolTab: ToolTab = 'price';
   export let onTabChange: (tab: ToolTab) => void;
 
-  const tabs: Array<[ToolTab, string]> = [
-    ['price', '鋒兄比價'],
-    ['phone', '手機比價'],
-    ['tube', '鋒兄Tube'],
-    ['finance', '鋒兄金融']
+  const tabs: Array<{ id: ToolTab; label: string }> = [
+    { id: 'price', label: '鋒兄比價' },
+    { id: 'phone', label: '手機比價' },
+    { id: 'tube', label: '鋒兄Tube' },
+    { id: 'finance', label: '鋒兄金融' }
   ];
+
+  const sampleVideos = [
+    '【張內咸脫口秀】一個「脫北者」拼命想回平壤，為什麼中國反而最尷尬？',
+    '一句「為你好」正在親手摧毀你的家庭？孩子越來越反叛',
+    '【看懂朝鮮】一個視頻了解朝鮮政治：金正恩如何清算父親？',
+    '領袖的冷啟動手冊：從篩選到滲洗，建立硬核團隊的流水線',
+    '不止汽車，光伏，連馬拉和尚都圍剿中國競爭',
+    '高考女生一句話引發全網男女大戰：性同意年齡到底該不該提高'
+  ];
+
+  const groupLabels: Record<FinanceQuote['group'] | 'all', string> = {
+    all: '全部',
+    tw: '台股',
+    us: '美股指數',
+    fx: '匯率',
+    crypto: '加密貨幣',
+    rates: '利率',
+    valuation: '估值'
+  };
 
   let priceForm: PricePoint = blankPrice();
   let phoneForm: PhonePrice = blankPhone();
@@ -72,18 +91,24 @@
   let phones: PhonePrice[] = [];
   let channels: TubeChannel[] = [];
   let quotes: FinanceQuote[] = [];
-  let priceQuery = '';
-  let phoneQuery = 'Samsung 26';
+  let priceQuery = 'https://24h.pchome.com.tw/prod/DRAHCO-A900J8363';
+  let phoneQuery = 'Samsung';
   let financeGroup: FinanceQuote['group'] | 'all' = 'all';
 
   $: filteredPrices = prices.filter((item) =>
     [item.title, item.url, item.source, item.note].join(' ').toLowerCase().includes(priceQuery.toLowerCase())
   );
-  $: priceStats = summarizePrices(filteredPrices);
+  $: visiblePrices = filteredPrices.length ? filteredPrices : prices.slice(0, 3);
+  $: priceStats = summarizePrices(visiblePrices);
   $: filteredPhones = phones.filter((item) =>
     [item.model, item.brand, item.storage].join(' ').toLowerCase().includes(phoneQuery.toLowerCase())
   );
+  $: phoneChartItems = filteredPhones.length ? filteredPhones.slice(0, 4) : phones.slice(0, 4);
   $: filteredQuotes = quotes.filter((quote) => financeGroup === 'all' || quote.group === financeGroup);
+  $: shillerQuote = quotes.find((quote) => quote.group === 'valuation') || null;
+  $: recentVideos = channels.flatMap((channel) =>
+    sampleVideos.slice(0, 2).map((title, index) => ({ channel, title, index }))
+  );
 
   onMount(() => {
     loadState();
@@ -102,7 +127,7 @@
       id: createId(),
       title: '',
       url: '',
-      source: '手動輸入',
+      source: 'BigGo API',
       price: 0,
       currency: 'TWD',
       checkedAt: today(),
@@ -156,74 +181,129 @@
     prices = [
       {
         id: createId(),
-        title: 'KIOXIA Exceria Plus G3 SSD 1TB',
-        url: 'https://24h.pchome.com.tw/prod/DRAHGT-A900GOJVX',
-        source: 'PChome',
-        price: 2090,
+        title: 'PChome 商品 DRAHCO-A900J8363',
+        url: 'https://24h.pchome.com.tw/prod/DRAHCO-A900J8363',
+        source: 'BigGo API',
+        price: 12199,
         currency: 'TWD',
-        checkedAt: '2026-06-04',
-        note: '歷史低價紀錄'
+        checkedAt: '2026-06-13',
+        note: '來源商品頁回傳 429，已改用 PChome 商品 API 取得標題與目前價格，再繼續嘗試 BigGo 比對。'
+      },
+      {
+        id: createId(),
+        title: 'PChome 商品 DYALS1-A900JUGXV',
+        url: 'https://24h.pchome.com.tw/prod/DYALS1-A900JUGXV',
+        source: '本地估值',
+        price: 4990,
+        currency: 'TWD',
+        checkedAt: '2026-06-13',
+        note: '保留本地測試流程，不連外查價。'
       }
     ];
     phones = [
       {
         id: createId(),
-        model: 'Samsung Galaxy A56 5G 12G/256G',
+        model: 'Samsung A17',
         brand: 'Samsung',
-        storage: '256G',
-        landtopPrice: 13990,
-        jyesPrice: 13490,
-        marketPrice: 12990,
+        storage: '128GB',
+        landtopPrice: 4990,
+        jyesPrice: 0,
+        marketPrice: 5790,
         url: 'https://www.landtop.com.tw/',
         updatedAt: today()
       },
       {
         id: createId(),
-        model: 'iPhone 16 128GB',
-        brand: 'Apple',
+        model: 'Samsung A17 6G 128GB',
+        brand: 'Samsung',
         storage: '128GB',
-        landtopPrice: 27900,
-        jyesPrice: 27400,
-        marketPrice: 26900,
+        landtopPrice: 4990,
+        jyesPrice: 4990,
+        marketPrice: 5790,
         url: 'https://www.landtop.com.tw/',
+        updatedAt: today()
+      },
+      {
+        id: createId(),
+        model: 'Samsung A17 8G 128GB',
+        brand: 'Samsung',
+        storage: '128GB',
+        landtopPrice: 0,
+        jyesPrice: 5790,
+        marketPrice: 5790,
+        url: 'https://www.jyes.com.tw/',
         updatedAt: today()
       }
     ];
     channels = [
       {
         id: createId(),
-        alias: 'henren778',
+        alias: '張內咸脫口秀',
         url: 'https://www.youtube.com/@henren778',
         rssUrl: 'https://www.youtube.com/feeds/videos.xml?user=henren778',
-        lastVideoTitle: '鋒兄指數更新',
+        lastVideoTitle: '【張內咸脫口秀】一個「脫北者」拼命想回平壤',
         lastVideoUrl: 'https://www.youtube.com/@henren778',
-        downfallIndex: '00000',
+        downfallIndex: '10 部影片',
+        updatedAt: today()
+      },
+      {
+        id: createId(),
+        alias: 'Sun Channel',
+        url: 'https://www.youtube.com/',
+        rssUrl: 'https://www.youtube.com/feeds/videos.xml',
+        lastVideoTitle: '一句「為你好」正在親手摧毀你的家庭？',
+        lastVideoUrl: 'https://www.youtube.com/',
+        downfallIndex: '10 部影片',
         updatedAt: today()
       }
     ];
     quotes = [
       {
         id: createId(),
-        name: '美元兌台幣',
-        symbol: 'USDTWD=X',
-        group: 'fx',
-        price: 32,
+        name: 'Shiller PE Ratio',
+        symbol: 'MULTPL',
+        group: 'valuation',
+        price: 41.43,
         changePercent: 0,
-        high52: 33,
-        low52: 30,
-        sourceUrl: 'https://finance.yahoo.com/quote/USDTWD=X',
+        high52: 44.19,
+        low52: 31.8,
+        sourceUrl: 'https://www.multpl.com/shiller-pe',
         updatedAt: today()
       },
       {
         id: createId(),
-        name: '台灣加權指數',
+        name: '加權指數',
         symbol: '^TWII',
         group: 'tw',
-        price: 23000,
-        changePercent: 0,
-        high52: 25000,
-        low52: 19000,
+        price: 44169.04,
+        changePercent: 2.36,
+        high52: 46552.16,
+        low52: 21551.58,
         sourceUrl: 'https://finance.yahoo.com/quote/%5ETWII',
+        updatedAt: today()
+      },
+      {
+        id: createId(),
+        name: '台積電',
+        symbol: '2330.TW',
+        group: 'tw',
+        price: 2310,
+        changePercent: 2.67,
+        high52: 2440,
+        low52: 1015,
+        sourceUrl: 'https://finance.yahoo.com/quote/2330.TW',
+        updatedAt: today()
+      },
+      {
+        id: createId(),
+        name: 'S&P 500 Index',
+        symbol: '^GSPC',
+        group: 'us',
+        price: 6038.81,
+        changePercent: 0.44,
+        high52: 6147.43,
+        low52: 4835.04,
+        sourceUrl: 'https://finance.yahoo.com/quote/%5EGSPC',
         updatedAt: today()
       }
     ];
@@ -294,7 +374,7 @@
     saveState();
   }
 
-  function removeItem(kind: 'price' | 'phone' | 'tube' | 'finance', id: string) {
+  function removeItem(kind: ToolTab, id: string) {
     if (kind === 'price') prices = prices.filter((item) => item.id !== id);
     if (kind === 'phone') phones = phones.filter((item) => item.id !== id);
     if (kind === 'tube') channels = channels.filter((item) => item.id !== id);
@@ -314,11 +394,11 @@
 
   function bestPhonePrice(item: PhonePrice) {
     const options = [
-      { source: 'Landtop', price: item.landtopPrice },
+      { source: '地標', price: item.landtopPrice },
       { source: '傑昇', price: item.jyesPrice },
-      { source: '市場', price: item.marketPrice }
+      { source: '最低價', price: item.marketPrice }
     ].filter((option) => Number(option.price) > 0);
-    return options.sort((a, b) => a.price - b.price)[0] || { source: '未填', price: 0 };
+    return options.sort((a, b) => a.price - b.price)[0] || { source: '待查', price: 0 };
   }
 
   function guessYoutubeRss(url: string, alias: string) {
@@ -332,12 +412,21 @@
 
   function quotePosition(quote: FinanceQuote) {
     if (!quote.high52 || !quote.low52 || quote.high52 <= quote.low52) return 0;
-    return Math.max(0, Math.min(100, ((quote.price - quote.low52) / (quote.high52 - quote.low52)) * 100));
+    return Math.max(4, Math.min(100, ((quote.price - quote.low52) / (quote.high52 - quote.low52)) * 100));
+  }
+
+  function phoneBar(value: number) {
+    const max = Math.max(...phoneChartItems.flatMap((item) => [item.landtopPrice, item.jyesPrice, item.marketPrice]), 1);
+    return Math.max(4, Math.min(100, (Number(value || 0) / max) * 100));
   }
 
   function formatMoney(value: number, currency = 'TWD') {
     if (!value) return '--';
-    return `${currency} ${Math.round(value).toLocaleString('zh-TW')}`;
+    return `${currency === 'TWD' ? 'NT$' : currency} ${Math.round(value).toLocaleString('zh-TW')}`;
+  }
+
+  function formatNumber(value: number) {
+    return Number(value || 0).toLocaleString('zh-TW', { maximumFractionDigits: 2 });
   }
 
   function openUrl(url: string) {
@@ -346,205 +435,340 @@
   }
 </script>
 
-<section class="tool-tabs" aria-label="工具子項目">
-  {#each tabs as tab}
-    <button class:active={toolTab === tab[0]} type="button" on:click={() => onTabChange(tab[0])}>
-      {tab[1]}
-    </button>
-  {/each}
-</section>
-
-{#if toolTab === 'price'}
-  <section class="tool-panel">
-    <div class="tool-title">
-      <div>
-        <h3>鋒兄比價</h3>
-        <p>依照參考專案的商品歷史價格概念，保存商品網址、來源、價格與查價日期，並自動計算低點、高點與均價。</p>
-      </div>
-      <button class="secondary" type="button" on:click={() => openUrl('https://biggo.com.tw/')}>開啟 BigGo</button>
-    </div>
-
-    <div class="tool-form">
-      <input bind:value={priceForm.title} placeholder="商品名稱，例如 KIOXIA SSD 1TB" />
-      <input bind:value={priceForm.url} placeholder="商品網址" />
-      <input bind:value={priceForm.source} placeholder="來源，例如 PChome、momo、BigGo" />
-      <input bind:value={priceForm.price} type="number" min="0" placeholder="價格" />
-      <input bind:value={priceForm.currency} placeholder="幣別" />
-      <input bind:value={priceForm.checkedAt} type="date" />
-      <textarea bind:value={priceForm.note} placeholder="備註"></textarea>
-      <button class="primary" type="button" on:click={addPrice}>加入價格紀錄</button>
-    </div>
-
-    <div class="tool-kpis">
-      <div><span>紀錄</span><strong>{priceStats.count}</strong></div>
-      <div><span>最低</span><strong>{formatMoney(priceStats.min)}</strong></div>
-      <div><span>最高</span><strong>{formatMoney(priceStats.max)}</strong></div>
-      <div><span>均價</span><strong>{formatMoney(priceStats.average)}</strong></div>
-    </div>
-
-    <input class="tool-search" bind:value={priceQuery} placeholder="搜尋商品、網址、來源或備註" />
-
-    <div class="tool-list">
-      {#each filteredPrices as item}
-        <article>
-          <div>
-            <h4>{item.title || item.url}</h4>
-            <p>{item.source} / {item.checkedAt} / {formatMoney(item.price, item.currency)}</p>
-            {#if item.note}<small>{item.note}</small>{/if}
-          </div>
-          <div class="tool-actions">
-            <button type="button" on:click={() => openUrl(item.url)}>開啟</button>
-            <button type="button" on:click={() => removeItem('price', item.id)}>刪除</button>
-          </div>
-        </article>
-      {/each}
-    </div>
+<section class="tool-console" aria-label="鋒兄工具">
+  <section class="tool-rail" aria-label="鋒兄工具子項目">
+    {#each tabs as tab}
+      <button class:active={toolTab === tab.id} type="button" on:click={() => onTabChange(tab.id)}>
+        {tab.label}
+      </button>
+    {/each}
   </section>
-{:else if toolTab === 'phone'}
-  <section class="tool-panel">
-    <div class="tool-title">
-      <div>
-        <h3>手機比價</h3>
-        <p>參考 Landtop/Jyes 手機比價流程，保存型號、容量與多通路價格，自動標出最低價來源。</p>
-      </div>
-      <div class="tool-actions">
-        <button class="secondary" type="button" on:click={() => openUrl('https://www.landtop.com.tw/')}>Landtop</button>
-        <button class="secondary" type="button" on:click={() => openUrl('https://www.jyes.com.tw/')}>傑昇</button>
-      </div>
-    </div>
 
-    <div class="tool-form">
-      <input bind:value={phoneForm.model} placeholder="手機型號" />
-      <select bind:value={phoneForm.brand}>
-        <option>Apple</option>
-        <option>Samsung</option>
-        <option>Other</option>
-      </select>
-      <input bind:value={phoneForm.storage} placeholder="容量，例如 256G" />
-      <input bind:value={phoneForm.landtopPrice} type="number" min="0" placeholder="Landtop 價格" />
-      <input bind:value={phoneForm.jyesPrice} type="number" min="0" placeholder="傑昇價格" />
-      <input bind:value={phoneForm.marketPrice} type="number" min="0" placeholder="其他市場價格" />
-      <input bind:value={phoneForm.url} placeholder="來源網址" />
-      <input bind:value={phoneForm.updatedAt} type="date" />
-      <button class="primary" type="button" on:click={addPhone}>加入手機比價</button>
-    </div>
-
-    <input class="tool-search" bind:value={phoneQuery} placeholder="搜尋 Apple、Samsung、型號或容量" />
-
-    <div class="comparison-table">
-      <div class="comparison-head">
-        <span>型號</span><span>Landtop</span><span>傑昇</span><span>市場</span><span>最低</span><span>操作</span>
-      </div>
-      {#each filteredPhones as item}
-        {@const best = bestPhonePrice(item)}
-        <div class="comparison-row">
-          <span><strong>{item.model}</strong><small>{item.brand} / {item.storage}</small></span>
-          <span>{formatMoney(item.landtopPrice)}</span>
-          <span>{formatMoney(item.jyesPrice)}</span>
-          <span>{formatMoney(item.marketPrice)}</span>
-          <span class="best">{best.source} {formatMoney(best.price)}</span>
-          <span class="tool-actions">
-            <button type="button" on:click={() => openUrl(item.url)}>開啟</button>
-            <button type="button" on:click={() => removeItem('phone', item.id)}>刪除</button>
-          </span>
+  {#if toolTab === 'price'}
+    <section class="tool-section theme-price">
+      <div class="tool-hero">
+        <div class="tool-identity">
+          <span class="tool-icon">⌕</span>
+          <div>
+            <p class="tool-eyebrow">FENGBRO PRICE</p>
+            <h3>鋒兄比價</h3>
+            <p>貼上商品網址，取得目前價格與歷史價格圖表。</p>
+          </div>
         </div>
-      {/each}
-    </div>
-  </section>
-{:else if toolTab === 'tube'}
-  <section class="tool-panel">
-    <div class="tool-title">
-      <div>
-        <h3>鋒兄Tube</h3>
-        <p>管理 YouTube 頻道、RSS 來源、最新影片與鋒兄指數。可先手動維護，之後接 Back4app 排程同步。</p>
       </div>
-      <button class="secondary" type="button" on:click={() => openUrl('https://www.youtube.com/')}>開啟 YouTube</button>
-    </div>
 
-    <div class="tool-form">
-      <input bind:value={tubeForm.alias} placeholder="頻道別名，例如 henren778" />
-      <input bind:value={tubeForm.url} placeholder="頻道 URL" />
-      <input bind:value={tubeForm.rssUrl} placeholder="RSS URL，可留空自動推測" />
-      <input bind:value={tubeForm.lastVideoTitle} placeholder="最新影片標題" />
-      <input bind:value={tubeForm.lastVideoUrl} placeholder="最新影片 URL" />
-      <input bind:value={tubeForm.downfallIndex} placeholder="鋒兄指數，例如 00012.34" />
-      <input bind:value={tubeForm.updatedAt} type="date" />
-      <button class="primary" type="button" on:click={addChannel}>加入頻道</button>
-    </div>
-
-    <div class="tool-list">
-      {#each channels as item}
-        <article>
-          <div>
-            <h4>{item.alias || item.url}</h4>
-            <p>更新：{item.updatedAt} / 鋒兄指數：{item.downfallIndex || '--'}</p>
-            <small>{item.lastVideoTitle || '尚未填最新影片'}</small>
+      <div class="tool-query-box">
+        <label class="full">
+          <span>商品網址</span>
+          <div class="tool-search-line">
+            <input bind:value={priceQuery} placeholder="https://24h.pchome.com.tw/prod/..." />
+            <button class="tool-primary" type="button">查詢歷史價格</button>
           </div>
-          <div class="tool-actions">
-            <button type="button" on:click={() => openUrl(item.url)}>頻道</button>
-            <button type="button" on:click={() => openUrl(item.rssUrl)}>RSS</button>
-            <button type="button" on:click={() => openUrl(item.lastVideoUrl)}>影片</button>
-            <button type="button" on:click={() => removeItem('tube', item.id)}>刪除</button>
-          </div>
-        </article>
-      {/each}
-    </div>
-  </section>
-{:else}
-  <section class="tool-panel">
-    <div class="tool-title">
-      <div>
-        <h3>鋒兄金融</h3>
-        <p>參考金融報價面板，保存指數、匯率、利率、加密貨幣與估值資料，並標示 52 週區間位置。</p>
-      </div>
-      <button class="secondary" type="button" on:click={() => openUrl('https://finance.yahoo.com/')}>Yahoo Finance</button>
-    </div>
-
-    <div class="tool-form">
-      <input bind:value={financeForm.name} placeholder="名稱，例如 台灣加權指數" />
-      <input bind:value={financeForm.symbol} placeholder="代號，例如 ^TWII" />
-      <select bind:value={financeForm.group}>
-        <option value="tw">台股</option>
-        <option value="us">美股</option>
-        <option value="fx">匯率</option>
-        <option value="crypto">加密貨幣</option>
-        <option value="rates">利率</option>
-        <option value="valuation">估值</option>
-      </select>
-      <input bind:value={financeForm.price} type="number" placeholder="目前價格" />
-      <input bind:value={financeForm.changePercent} type="number" placeholder="漲跌 %" />
-      <input bind:value={financeForm.high52} type="number" placeholder="52 週高" />
-      <input bind:value={financeForm.low52} type="number" placeholder="52 週低" />
-      <input bind:value={financeForm.sourceUrl} placeholder="來源 URL" />
-      <input bind:value={financeForm.updatedAt} type="date" />
-      <button class="primary" type="button" on:click={addQuote}>加入金融追蹤</button>
-    </div>
-
-    <div class="tool-tabs compact">
-      {#each ['all', 'tw', 'us', 'fx', 'crypto', 'rates', 'valuation'] as group}
-        <button class:active={financeGroup === group} type="button" on:click={() => (financeGroup = group as FinanceQuote['group'] | 'all')}>
-          {group}
+        </label>
+        <button class="method-card selected" type="button">
+          <strong>BigGo API</strong>
+          <span>查詢 BigGo 歷史價格資料</span>
         </button>
-      {/each}
-    </div>
+        <button class="method-card" type="button">
+          <strong>本地估值</strong>
+          <span>保留本地測試流程，不連外查價</span>
+        </button>
+      </div>
 
-    <div class="tool-list">
-      {#each filteredQuotes as quote}
-        <article>
+      <div class="tool-mini-section">
+        <div class="section-line">
+          <strong>最近連結</strong>
+          <span>{prices.length} 筆</span>
+        </div>
+        <div class="recent-links">
+          {#each prices.slice(0, 2) as item}
+            <button type="button" on:click={() => (priceQuery = item.url)}>
+              <strong>{item.title || item.url}</strong>
+              <span>{item.url}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+
+      <div class="tool-result-card">
+        <div>
+          <p class="tool-eyebrow">比價結果</p>
+          <h4>{priceStats.low?.title || '目前沒有可比價商品'}</h4>
+          <p>來源：{priceStats.low?.source || 'BigGo API'}，更新：{priceStats.low?.checkedAt || today()}</p>
+        </div>
+        <div class="price-number">
+          <span>現在價格</span>
+          <strong>{formatMoney(priceStats.low?.price || priceStats.min)}</strong>
+        </div>
+        {#if priceStats.low?.note}
+          <p class="tool-alert">{priceStats.low.note}</p>
+        {/if}
+      </div>
+
+      <details class="tool-editor">
+        <summary>新增比價資料</summary>
+        <div class="tool-form">
+          <input bind:value={priceForm.title} placeholder="商品名稱" />
+          <input bind:value={priceForm.url} placeholder="商品網址" />
+          <input bind:value={priceForm.source} placeholder="資料來源" />
+          <input bind:value={priceForm.price} type="number" min="0" placeholder="價格" />
+          <input bind:value={priceForm.currency} placeholder="幣別" />
+          <input bind:value={priceForm.checkedAt} type="date" />
+          <textarea bind:value={priceForm.note} placeholder="備註"></textarea>
+          <button class="tool-primary" type="button" on:click={addPrice}>新增資料</button>
+        </div>
+      </details>
+    </section>
+  {:else if toolTab === 'phone'}
+    <section class="tool-section theme-phone">
+      <div class="tool-hero">
+        <div class="tool-identity">
+          <span class="tool-icon">▯</span>
           <div>
-            <h4>{quote.name || quote.symbol}</h4>
-            <p>{quote.symbol} / {quote.group} / {quote.price.toLocaleString('zh-TW')} / {quote.changePercent}%</p>
-            <div class="range">
-              <span style={`width:${quotePosition(quote)}%`}></span>
+            <h3>手機比價</h3>
+            <p>根據地標網通與傑昇通信比價，可搜尋 iPhone 17、Samsung 26、Samsung A17 等機型。</p>
+          </div>
+        </div>
+        <p class="tool-meta">更新：{today()}，結果 {phoneChartItems.length} 筆</p>
+      </div>
+
+      <div class="phone-search-grid">
+        <div class="phone-search-card">
+          <div>
+            <strong>蘋果手機區塊</strong>
+            <span>預設查詢：iPhone 17，每年九月切換新基準。</span>
+          </div>
+          <div class="tool-search-line">
+            <input value="iPhone 17" aria-label="蘋果手機搜尋" />
+            <button class="tool-primary" type="button">搜尋蘋果</button>
+          </div>
+        </div>
+        <div class="phone-search-card">
+          <div>
+            <strong>三星手機區塊</strong>
+            <span>預設查詢：Samsung 26，三月前用去年末兩碼。</span>
+          </div>
+          <div class="tool-search-line">
+            <input bind:value={phoneQuery} aria-label="三星手機搜尋" />
+            <button class="tool-primary" type="button">搜尋三星</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="landtop-chart">
+        <div class="section-line">
+          <div>
+            <p class="tool-eyebrow">LANDTOP CHART</p>
+            <strong>地標網通 vs 傑昇通信</strong>
+          </div>
+          <span>▥</span>
+        </div>
+        {#each phoneChartItems as item}
+          <div class="bar-row">
+            <div>
+              <strong>{item.model}</strong>
+              <span>{item.brand}</span>
             </div>
-            <small>52 週低 {quote.low52 || '--'} / 52 週高 {quote.high52 || '--'} / 更新 {quote.updatedAt}</small>
+            <span>地標</span>
+            <div class="bar-track"><i style={`width:${phoneBar(item.landtopPrice)}%`}></i></div>
+            <strong>{formatMoney(item.landtopPrice)}</strong>
+            <span>傑昇</span>
+            <div class="bar-track purple"><i style={`width:${phoneBar(item.jyesPrice)}%`}></i></div>
+            <strong>{formatMoney(item.jyesPrice)}</strong>
           </div>
-          <div class="tool-actions">
-            <button type="button" on:click={() => openUrl(quote.sourceUrl)}>來源</button>
+        {/each}
+      </div>
+
+      <div class="phone-results">
+        {#each phoneChartItems as item}
+          {@const best = bestPhonePrice(item)}
+          <article>
+            <div>
+              <h4>{item.model}</h4>
+              <p>{item.brand} / {item.storage} / 更新 {item.updatedAt}</p>
+            </div>
+            <div>
+              <span>目前最低</span>
+              <strong>{best.source} {formatMoney(best.price)}</strong>
+            </div>
+            <button type="button" on:click={() => openUrl(item.url)}>開啟來源</button>
+            <button type="button" on:click={() => removeItem('phone', item.id)}>刪除</button>
+          </article>
+        {/each}
+      </div>
+
+      <details class="tool-editor">
+        <summary>新增手機比價</summary>
+        <div class="tool-form">
+          <input bind:value={phoneForm.model} placeholder="手機型號" />
+          <select bind:value={phoneForm.brand}>
+            <option>Apple</option>
+            <option>Samsung</option>
+            <option>Other</option>
+          </select>
+          <input bind:value={phoneForm.storage} placeholder="容量" />
+          <input bind:value={phoneForm.landtopPrice} type="number" min="0" placeholder="地標價格" />
+          <input bind:value={phoneForm.jyesPrice} type="number" min="0" placeholder="傑昇價格" />
+          <input bind:value={phoneForm.marketPrice} type="number" min="0" placeholder="市場最低價" />
+          <input bind:value={phoneForm.url} placeholder="來源網址" />
+          <input bind:value={phoneForm.updatedAt} type="date" />
+          <button class="tool-primary" type="button" on:click={addPhone}>新增手機</button>
+        </div>
+      </details>
+    </section>
+  {:else if toolTab === 'tube'}
+    <section class="tool-section theme-tube">
+      <div class="tool-hero">
+        <div class="tool-identity">
+          <span class="tool-icon">▷</span>
+          <div>
+            <p class="tool-eyebrow">FENGBRO TUBE</p>
+            <h3>鋒兄Tube</h3>
+            <p>追蹤指定 YouTube 頻道最新影片，每個頻道顯示 10 部，目前追蹤 {channels.length} 個頻道。</p>
+          </div>
+        </div>
+        <div class="tool-actions">
+          <span class="tool-badge">更新：{today()}</span>
+          <button class="tool-primary" type="button">重新整理</button>
+        </div>
+      </div>
+
+      <div class="recent-video-panel">
+        <div class="section-line">
+          <strong>3 天內新影片：{recentVideos.length} 部</strong>
+        </div>
+        <div class="recent-video-grid">
+          {#each recentVideos.slice(0, 8) as video}
+            <article>
+              <strong>{video.title}</strong>
+              <span>{video.channel.alias} / {video.channel.updatedAt}</span>
+            </article>
+          {/each}
+        </div>
+      </div>
+
+      <div class="channel-grid">
+        {#each channels as item}
+          <article class="channel-card">
+            <div>
+              <h4>{item.alias || item.url}</h4>
+              <button type="button" on:click={() => openUrl(item.url)}>開啟頻道</button>
+            </div>
+            <div class="video-strip">
+              <span>{item.lastVideoTitle || '目前尚未記錄最新影片'}</span>
+              <span>{item.downfallIndex || '10 部影片'}</span>
+            </div>
+            <div class="tool-actions">
+              <button type="button" on:click={() => openUrl(item.rssUrl)}>RSS</button>
+              <button type="button" on:click={() => openUrl(item.lastVideoUrl)}>影片</button>
+              <button type="button" on:click={() => removeItem('tube', item.id)}>刪除</button>
+            </div>
+          </article>
+        {/each}
+      </div>
+
+      <details class="tool-editor">
+        <summary>頻道管理</summary>
+        <div class="tool-form">
+          <input bind:value={tubeForm.alias} placeholder="頻道名稱" />
+          <input bind:value={tubeForm.url} placeholder="頻道 URL" />
+          <input bind:value={tubeForm.rssUrl} placeholder="RSS URL，可自動推算" />
+          <input bind:value={tubeForm.lastVideoTitle} placeholder="最新影片標題" />
+          <input bind:value={tubeForm.lastVideoUrl} placeholder="最新影片 URL" />
+          <input bind:value={tubeForm.downfallIndex} placeholder="摘要標籤" />
+          <input bind:value={tubeForm.updatedAt} type="date" />
+          <button class="tool-primary" type="button" on:click={addChannel}>新增頻道</button>
+        </div>
+      </details>
+    </section>
+  {:else}
+    <section class="tool-section theme-finance">
+      <div class="tool-hero">
+        <div class="tool-identity">
+          <span class="tool-icon">▥</span>
+          <div>
+            <p class="tool-eyebrow">FENGBRO FINANCE</p>
+            <h3>鋒兄金融</h3>
+            <p>CNBC 報價監控：股指、商品、利率與加密貨幣，觸及新高或新低時自動標註。</p>
+          </div>
+        </div>
+        <button class="tool-primary" type="button">重新整理</button>
+      </div>
+
+      <div class="finance-hero">
+        <div class="tool-identity">
+          <span class="tool-icon">▥</span>
+          <div>
+            <h4>{shillerQuote?.name || 'Shiller PE Ratio'}</h4>
+            <p>Max: {formatNumber(shillerQuote?.high52 || 44.19)} / {today()}</p>
+          </div>
+        </div>
+        <div>
+          <span>CURRENT</span>
+          <strong>{formatNumber(shillerQuote?.price || 41.43)}</strong>
+          <button type="button" on:click={() => openUrl(shillerQuote?.sourceUrl || 'https://www.multpl.com/shiller-pe')}>
+            multpl.com
+          </button>
+        </div>
+      </div>
+
+      <div class="tool-rail compact">
+        {#each Object.entries(groupLabels) as [group, label]}
+          <button
+            class:active={financeGroup === group}
+            type="button"
+            on:click={() => (financeGroup = group as FinanceQuote['group'] | 'all')}
+          >
+            {label}
+          </button>
+        {/each}
+      </div>
+
+      <div class="quote-grid">
+        {#each filteredQuotes as quote}
+          <article class="quote-card">
+            <div class="section-line">
+              <div>
+                <h4>{quote.name || quote.symbol}</h4>
+                <p>{quote.symbol}</p>
+              </div>
+              <button type="button" on:click={() => openUrl(quote.sourceUrl)}>來源</button>
+            </div>
+            <span>最新價</span>
+            <strong>{formatNumber(quote.price)} <small>{quote.group === 'tw' ? 'TWD' : ''}</small></strong>
+            <em class:down={quote.changePercent < 0}>{quote.changePercent > 0 ? '+' : ''}{quote.changePercent}%</em>
+            <div class="range-pair">
+              <span>52W High <strong>{formatNumber(quote.high52)}</strong></span>
+              <span>52W Low <strong>{formatNumber(quote.low52)}</strong></span>
+            </div>
+            <div class="range"><span style={`width:${quotePosition(quote)}%`}></span></div>
             <button type="button" on:click={() => removeItem('finance', quote.id)}>刪除</button>
-          </div>
-        </article>
-      {/each}
-    </div>
-  </section>
-{/if}
+          </article>
+        {/each}
+      </div>
+
+      <details class="tool-editor">
+        <summary>新增金融監控</summary>
+        <div class="tool-form">
+          <input bind:value={financeForm.name} placeholder="名稱" />
+          <input bind:value={financeForm.symbol} placeholder="代號" />
+          <select bind:value={financeForm.group}>
+            <option value="tw">台股</option>
+            <option value="us">美股指數</option>
+            <option value="fx">匯率</option>
+            <option value="crypto">加密貨幣</option>
+            <option value="rates">利率</option>
+            <option value="valuation">估值</option>
+          </select>
+          <input bind:value={financeForm.price} type="number" placeholder="最新價格" />
+          <input bind:value={financeForm.changePercent} type="number" placeholder="漲跌 %" />
+          <input bind:value={financeForm.high52} type="number" placeholder="52W High" />
+          <input bind:value={financeForm.low52} type="number" placeholder="52W Low" />
+          <input bind:value={financeForm.sourceUrl} placeholder="來源 URL" />
+          <input bind:value={financeForm.updatedAt} type="date" />
+          <button class="tool-primary" type="button" on:click={addQuote}>新增金融資料</button>
+        </div>
+      </details>
+    </section>
+  {/if}
+</section>
