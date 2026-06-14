@@ -42,6 +42,7 @@
   let dbConfig: Back4appConfig = { ...defaultBack4appConfig };
   let mode: RepositoryMode = 'localStorage';
 
+  $: activeSurfaceLabel = activeModule.id === 'tools' ? toolTabLabel(toolTab) : activeModule.short;
   $: mode = getRepository(activeModule).mode;
   $: filteredRecords = sortRecords(
     activeModule,
@@ -139,7 +140,7 @@
   async function deleteRecord(item: RecordItem) {
     const module = activeModule;
     const label = primaryValue(module, item) || '這筆資料';
-    if (!confirm(`刪除「${label}」？`)) return;
+    if (!confirm(`刪除 ${label}？`)) return;
 
     try {
       await getRepository(module).delete(item.id);
@@ -160,7 +161,7 @@
       await getRepository(module).update(item.id, updated);
       await loadRecords(module);
     } catch (error) {
-      syncMessage = error instanceof Error ? error.message : '庫存更新失敗';
+      syncMessage = error instanceof Error ? error.message : '更新庫存失敗';
     }
   }
 
@@ -194,7 +195,7 @@
 
   async function resetSeed() {
     const module = activeModule;
-    if (!confirm(`重置「${module.title}」為範例資料？`)) return;
+    if (!confirm(`重新載入 ${module.title} 範例資料？`)) return;
 
     const activeRepository = getRepository(module);
     if (activeRepository.mode === 'back4app') {
@@ -207,7 +208,7 @@
 
   async function clearModule() {
     const module = activeModule;
-    if (!confirm(`清空「${module.title}」全部資料？`)) return;
+    if (!confirm(`清空 ${module.title} 目前資料？`)) return;
 
     const activeRepository = getRepository(module);
     for (const item of records) await activeRepository.delete(item.id);
@@ -216,13 +217,13 @@
 
   function saveDatabaseConfig() {
     saveBack4appConfig(dbConfig);
-    syncMessage = isBack4appReady(dbConfig) ? 'Back4app 設定已儲存。' : 'Back4app 設定未完整，暫時使用 localStorage。';
+    syncMessage = isBack4appReady(dbConfig) ? 'Back4app 設定已儲存' : 'Back4app 設定未完整，將使用 localStorage';
     void loadRecords(activeModule);
   }
 
   async function testDatabaseConnection() {
     if (!isBack4appReady(dbConfig)) {
-      syncMessage = '請先填入 Endpoint、Application ID 與 Master Key。';
+      syncMessage = '請先填入 Endpoint、Application ID 與 Master Key';
       return;
     }
 
@@ -238,80 +239,120 @@
     dbConfig = { ...defaultBack4appConfig, appId: '', masterKey: '' };
     saveDatabaseConfig();
   }
+
+  function toolTabLabel(tab: ToolTab) {
+    if (tab === 'price') return '鋒兄比價';
+    if (tab === 'phone') return '手機比價';
+    if (tab === 'tube') return '鋒兄Tube';
+    return '鋒兄金融';
+  }
+
+  function todayLabel() {
+    return new Intl.DateTimeFormat('zh-TW', {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+      timeZone: 'Asia/Taipei'
+    }).format(new Date());
+  }
 </script>
 
 <svelte:head>
+  <link rel="icon" href="/favicon.svg" />
   <meta name="description" content="鋒兄 Back4app SvelteKit CRUD workspace with CSV import and export." />
 </svelte:head>
 
 <main class="app-shell">
-  <ModuleNav modules={menuModules} {activeModule} onSelect={selectModule} />
+  <ModuleNav
+    modules={menuModules}
+    {activeModule}
+    {toolTab}
+    onSelect={selectModule}
+    onToolTabChange={(tab) => (toolTab = tab)}
+  />
 
   <section class="workspace">
-    <header class="topbar">
-      <div>
-        <p class="crumb">參考 fengbroaiappwrite / Back4app / Appwrite CSV</p>
-        <h2>{activeModule.title}</h2>
-        <p>{activeModule.description}</p>
+    <div class="workspace-inner">
+      <header class="active-surface">
+        <div>
+          <p>Active Surface</p>
+          <strong>{activeSurfaceLabel}</strong>
+        </div>
+        <div class="surface-pills">
+          <span><small>Today</small>{todayLabel()}</span>
+          <span><small>Modules</small>{menuModules.length} 個模組</span>
+        </div>
+      </header>
+
+      <div class="surface-panel">
+        <header class="topbar">
+          <div>
+            <p class="crumb">Console View</p>
+            <h2>{activeModule.title}</h2>
+            <p>{activeModule.description}</p>
+          </div>
+          {#if activeModule.id !== 'tools'}
+            <div class="actions">
+              <button class="secondary" type="button" on:click={() => (dbPanelOpen = !dbPanelOpen)}>
+                {isBack4appReady(dbConfig) ? 'Back4app 已啟用' : '設定 Back4app'}
+              </button>
+              <label class="file-button">
+                匯入 CSV
+                <input type="file" accept=".csv,text/csv" on:change={importCsv} />
+              </label>
+              <button class="secondary" type="button" on:click={exportCsv}>匯出 CSV</button>
+            </div>
+          {/if}
+        </header>
+
+        {#if activeModule.id === 'tools'}
+          <ToolPanel {toolTab} onTabChange={(tab) => (toolTab = tab)} />
+        {:else}
+          {#if dbPanelOpen}
+            <Back4appPanel
+              bind:config={dbConfig}
+              {activeModule}
+              onSave={saveDatabaseConfig}
+              onTest={testDatabaseConnection}
+              onUseLocal={useLocalStorage}
+            />
+          {/if}
+
+          <StatsRow {activeModule} recordCount={records.length} {totalAmount} {mode} />
+
+          {#if syncMessage}
+            <pre class="notice">{syncMessage}</pre>
+          {/if}
+          {#if loadingRecords}
+            <p class="notice">讀取資料中...</p>
+          {/if}
+
+          <RecordForm bind:form {activeModule} {editingId} onSubmit={submitRecord} onCancel={cancelEdit} />
+
+          <section class="list-head">
+            <div class="search">
+              <input bind:value={query} placeholder={`搜尋 ${activeModule.short}`} />
+            </div>
+            <div class="compact-actions">
+              <button class="ghost" type="button" on:click={resetSeed}>載入範例</button>
+              <button class="danger" type="button" on:click={clearModule}>清空</button>
+            </div>
+          </section>
+
+          {#if importMessage}
+            <p class="notice">{importMessage}</p>
+          {/if}
+
+          <RecordList
+            {activeModule}
+            records={filteredRecords}
+            onEdit={editRecord}
+            onDuplicate={duplicateRecord}
+            onDelete={deleteRecord}
+            onAdjustAmount={adjustAmount}
+          />
+        {/if}
       </div>
-      <div class="actions">
-        <button class="secondary" type="button" on:click={() => (dbPanelOpen = !dbPanelOpen)}>
-          {isBack4appReady(dbConfig) ? 'Back4app 已啟用' : '設定 Back4app'}
-        </button>
-        <label class="file-button">
-          匯入 CSV
-          <input type="file" accept=".csv,text/csv" on:change={importCsv} />
-        </label>
-        <button class="secondary" type="button" on:click={exportCsv}>匯出 CSV</button>
-      </div>
-    </header>
-
-    {#if dbPanelOpen}
-      <Back4appPanel
-        bind:config={dbConfig}
-        {activeModule}
-        onSave={saveDatabaseConfig}
-        onTest={testDatabaseConnection}
-        onUseLocal={useLocalStorage}
-      />
-    {/if}
-
-    <StatsRow {activeModule} recordCount={records.length} {totalAmount} {mode} />
-
-    {#if syncMessage}
-      <pre class="notice">{syncMessage}</pre>
-    {/if}
-    {#if loadingRecords}
-      <p class="notice">讀取資料中...</p>
-    {/if}
-
-    {#if activeModule.id === 'tools'}
-      <ToolPanel {toolTab} onTabChange={(tab) => (toolTab = tab)} />
-    {/if}
-
-    <RecordForm bind:form {activeModule} {editingId} onSubmit={submitRecord} onCancel={cancelEdit} />
-
-    <section class="list-head">
-      <div class="search">
-        <input bind:value={query} placeholder={`搜尋 ${activeModule.short}`} />
-      </div>
-      <div class="compact-actions">
-        <button class="ghost" type="button" on:click={resetSeed}>載入範例</button>
-        <button class="danger" type="button" on:click={clearModule}>清空</button>
-      </div>
-    </section>
-
-    {#if importMessage}
-      <p class="notice">{importMessage}</p>
-    {/if}
-
-    <RecordList
-      {activeModule}
-      records={filteredRecords}
-      onEdit={editRecord}
-      onDuplicate={duplicateRecord}
-      onDelete={deleteRecord}
-      onAdjustAmount={adjustAmount}
-    />
+    </div>
   </section>
 </main>
