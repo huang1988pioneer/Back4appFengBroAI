@@ -21,6 +21,7 @@ const YOUTUBE_HEADERS = {
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
   accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 };
+const REQUEST_TIMEOUT_MS = 15000;
 
 function decodeHtml(value: string) {
   return value
@@ -72,7 +73,11 @@ function fallbackTitle(sourceUrl: string) {
 }
 
 async function resolveChannelId(sourceUrl: string) {
-  const response = await fetch(sourceUrl.replace(/\/videos\/?$/i, ''), { headers: YOUTUBE_HEADERS, cache: 'no-store' });
+  const response = await fetch(sourceUrl.replace(/\/videos\/?$/i, ''), {
+    headers: YOUTUBE_HEADERS,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    cache: 'no-store'
+  });
   if (!response.ok) throw new Error(`YouTube channel page HTTP ${response.status}`);
   const html = await response.text();
   const channelId =
@@ -105,7 +110,11 @@ function parseFeed(xml: string) {
 async function fetchChannel(channel: { alias: string; sourceUrl: string }) {
   const { channelId, title } = await resolveChannelId(channel.sourceUrl);
   const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
-  const response = await fetch(feedUrl, { headers: YOUTUBE_HEADERS, cache: 'no-store' });
+  const response = await fetch(feedUrl, {
+    headers: YOUTUBE_HEADERS,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    cache: 'no-store'
+  });
   if (!response.ok) throw new Error(`YouTube feed HTTP ${response.status}`);
   const { feedTitle, videos } = parseFeed(await response.text());
   const displayTitle = channel.alias || feedTitle || title || fallbackTitle(channel.sourceUrl);

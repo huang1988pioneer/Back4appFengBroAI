@@ -19,6 +19,7 @@ const YAHOO_CHART_ENDPOINT = 'https://query1.finance.yahoo.com/v8/finance/chart'
 const SHILLER_PE_URL = 'https://www.multpl.com/shiller-pe';
 const SHILLER_PE_RECORD_HIGH = 44.19;
 const SHILLER_PE_RECORD_DATE = 'Dec 1999';
+const REQUEST_TIMEOUT_MS = 15000;
 
 const INSTRUMENTS: Instrument[] = [
   { id: 'taiex', name: '加權指數', symbol: '^TWII', group: 'tw', sourceUrl: 'https://finance.yahoo.com/quote/%5ETWII', currencyHint: 'TWD' },
@@ -71,6 +72,7 @@ async function fetchYahoo(instrument: Instrument) {
       accept: 'application/json,text/plain,*/*',
       'user-agent': USER_AGENT
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     cache: 'no-store'
   });
   if (!response.ok) throw new Error(`Yahoo Finance ${response.status}`);
@@ -119,6 +121,7 @@ function firstNumber(text: string, pattern: RegExp) {
 async function fetchShillerPe() {
   const response = await fetch(SHILLER_PE_URL, {
     headers: { accept: 'text/html,text/plain,*/*', 'user-agent': USER_AGENT },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     cache: 'no-store'
   });
   if (!response.ok) throw new Error(`Multpl ${response.status}`);

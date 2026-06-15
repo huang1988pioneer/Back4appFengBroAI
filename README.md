@@ -1,58 +1,18 @@
 # Back4appFengBroAI
 
-SvelteKit 版鋒兄工作台，參考 `goldshoot0720/fengbroaiappwrite` 的模組結構，提供 Back4app 資料庫 CRUD、CSV 匯入與 CSV 匯出。
+鋒兄 AI 的 SvelteKit + Back4app 工作台。介面參考 `goldshoot0720/fengbroaiappwrite`，資料模組提供 CRUD、CSV 匯入與 CSV 匯出；鋒兄工具改為使用即時 API，不再使用寫死的靜態資料。
 
 ## 功能
 
-- 鋒兄訂閱
-- 鋒兄食品（含商品庫存加減）
-- 鋒兄筆記
-- 鋒兄常用
-- 鋒兄銀行（含電子票證）
-- 鋒兄例行
-- 鋒兄工具：鋒兄比價、手機比價、鋒兄Tube、鋒兄金融
-- 鋒兄設定、鋒兄關於
-
-## 架構說明
-
-- **後端資料庫**：Back4app (Parse Server)
-- **前端部署**：支援 Vercel、Cloudflare Pages、或 Back4app Workers & Pages
-- **備援機制**：未設定 Back4app 時自動使用瀏覽器 localStorage
-
-## Back4app 資料庫設定
-
-### 方式一：環境變數（推薦用於部署）
-
-複製 `.env.example` 為 `.env` 並填入你的 Back4app 設定：
-
-```bash
-cp .env.example .env
-```
-
-編輯 `.env` 文件：
-
-```env
-VITE_BACK4APP_ENDPOINT=https://parseapi.back4app.com
-VITE_BACK4APP_APP_ID=你的_Application_ID
-VITE_BACK4APP_MASTER_KEY=你的_Master_Key
-```
-
-**Back4app Workers & Pages 部署**：在 Back4app Dashboard 的 Settings > Build environment variable 中設定：
-- `VITE_BACK4APP_ENDPOINT`
-- `VITE_BACK4APP_APP_ID`
-- `VITE_BACK4APP_MASTER_KEY`
-
-**Vercel 部署**：在 Vercel Dashboard 的 Settings > Environment Variables 中設定相同的變數。
-
-### 方式二：網頁設定頁面
-
-頁面右上角點選「設定 Back4app」，填入：
-
-- Parse Endpoint，預設 `https://parseapi.back4app.com`
-- Application ID
-- Master Key
-
-設定完整後，CRUD 與 CSV 匯入會寫入 Back4app Parse Class。若未設定，會自動使用瀏覽器 `localStorage` 備援。
+- 鋒兄訂閱、食品、筆記、常用、銀行、例行、設定與關於。
+- CRUD：新增、編輯、複製、刪除、庫存增減。
+- CSV：匯入 Appwrite CSV 格式並可匯出目前資料。
+- Back4app：設定完整時寫入 Parse Class；未設定時使用 `localStorage` 備援。
+- 鋒兄工具：
+  - 鋒兄比價：即時解析 PChome/momo 商品頁，並嘗試串 BigGo 歷史價格。
+  - 手機比價：即時抓地標網通與傑昇通信資料。
+  - 鋒兄Tube：即時讀取 YouTube 頻道 RSS feed。
+  - 鋒兄金融：即時讀取 Yahoo Finance 與 Multpl Shiller PE。
 
 ## 開發
 
@@ -61,57 +21,51 @@ npm install
 npm run dev
 ```
 
-CSV 匯入會依照標題列對應欄位；匯出會輸出 UTF-8 BOM CSV，方便 Excel 開啟。
-
-## 部署到 Vercel
-
-### 方式一：通過 Vercel Dashboard（推薦）
-
-1. 前往 [Vercel](https://vercel.com)
-2. 點擊 "Import Project"
-3. 連接你的 GitHub 倉庫
-4. Vercel 會自動檢測為 SvelteKit 專案並使用正確的設定
-
-### 方式二：使用 Vercel CLI
+常用檢查：
 
 ```bash
-npm install -g vercel
+npm run check
 npm run build
-vercel --prod
 ```
 
-**注意**：Vercel 會自動讀取 `vercel.json` 和 `.node-version` 配置。
+## Back4app 設定
 
-## 部署到 Cloudflare Pages
+可建立 `.env`：
 
-### 方式一：通過 Cloudflare Dashboard
-
-1. 前往 [Cloudflare Pages](https://pages.cloudflare.com)
-2. 連接你的 GitHub 倉庫
-3. 設定構建配置：
-   - **Build command**: `npm run build`
-   - **Build output directory**: `build`
-   - **Root directory**: `/`
-
-### 方式二：使用 Wrangler CLI
-
-```bash
-npm run build
-npx wrangler pages deploy build --project-name=back4appfengbroai
+```env
+VITE_BACK4APP_ENDPOINT=https://parseapi.back4app.com
+VITE_BACK4APP_APP_ID=你的_Application_ID
+VITE_BACK4APP_MASTER_KEY=你的_Master_Key
 ```
 
-**注意**：Cloudflare Pages 使用 `wrangler.toml` 中的 `not_found_handling = "single-page-application"` 設定來處理 SPA 路由。
+也可以在畫面中的「設定 Back4app」面板填入：
 
-## 部署到 Back4app Workers & Pages
+- Parse Endpoint
+- Application ID
+- Master Key
 
-### 通過 Back4app Dashboard
+設定完整後，CRUD 與 CSV 匯入會寫入 Back4app。未設定時，資料會保存在瀏覽器 `localStorage`。
 
-1. 前往 [Back4app Workers & Pages](https://dashboard.back4app.com)
-2. 連接你的 GitHub 倉庫
-3. 設定構建配置：
-   - **Build command**: `npm run build`
-   - **Deploy command**: `npx wrangler deploy --assets build`
-   - **Root directory**: `/`
-   - **Node version**: 20（自動從 `.node-version` 讀取）
+## 即時工具 API
 
-**重要**：部署命令必須包含 `--assets build` 參數，告訴 Wrangler 要部署靜態資源。
+工具頁使用 SvelteKit server routes：
+
+- `GET /api/tools/price?url=...`
+- `GET /api/tools/phone?query=Samsung`
+- `GET /api/tools/tube`
+- `POST /api/tools/tube`
+- `GET /api/tools/finance`
+
+外部來源可能被限流或暫時無法連線。API 已加上 15 秒逾時，前端會顯示錯誤或 warning，而不是卡住整個工具頁。
+
+## 部署
+
+此專案使用 `@sveltejs/adapter-auto`，並且 `src/routes/+layout.ts` 關閉 prerender，讓 `/api/tools/*` 可以在支援 server routes 的平台執行。
+
+建議部署到：
+
+- Vercel
+- Netlify
+- 其他支援 SvelteKit server endpoints 的平台
+
+若部署到純靜態 Pages，CRUD 前端仍可載入，但鋒兄工具的即時 API 不會運作。

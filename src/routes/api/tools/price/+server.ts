@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36';
+const REQUEST_TIMEOUT_MS = 15000;
 
 type PricePoint = {
   date: string;
@@ -52,6 +53,7 @@ async function fetchWithBrowserHeaders(url: string, init: RequestInit = {}) {
       'accept-language': 'zh-TW,zh;q=0.9,en;q=0.8',
       ...(init.headers || {})
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     cache: 'no-store'
   });
   if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
