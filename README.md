@@ -56,7 +56,7 @@ VITE_BACK4APP_MASTER_KEY=你的_Master_Key
 - `POST /api/tools/tube`
 - `GET /api/tools/finance`
 
-外部來源可能被限流或暫時無法連線。API 已加上 15 秒逾時，前端會顯示錯誤或 warning，而不是卡住整個工具頁。
+外部來源可能被限流或暫時無法連線。API 已加上 15 秒逾時，並回傳 `Cache-Control: no-store`，前端會顯示錯誤或 warning，而不是卡住整個工具頁或拿到過期快取。
 
 ## 部署
 

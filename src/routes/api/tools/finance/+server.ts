@@ -152,7 +152,8 @@ async function fetchShillerPe() {
   };
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ setHeaders }) => {
+  setHeaders({ 'cache-control': 'no-store' });
   const settled = await Promise.allSettled([...INSTRUMENTS.map(fetchYahoo), fetchShillerPe()]);
   const quotes = settled.map((item, index) => {
     if (item.status === 'fulfilled') return item.value;

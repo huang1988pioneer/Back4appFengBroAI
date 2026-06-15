@@ -185,7 +185,8 @@ function mergeProducts(landtop: CompareProduct[], jyes: CompareProduct[]) {
   ];
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, setHeaders }) => {
+  setHeaders({ 'cache-control': 'no-store' });
   const query = url.searchParams.get('query') || '';
   const refresh = url.searchParams.get('refresh') === '1';
   const warnings: string[] = [];

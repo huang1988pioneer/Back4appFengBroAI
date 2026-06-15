@@ -147,7 +147,8 @@ async function fetchBigGoHistory(sourceUrl: string, title: string, currentPrice:
   return { matchedTitle: match.title, matchedUrl: match.url, history };
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, setHeaders }) => {
+  setHeaders({ 'cache-control': 'no-store' });
   const targetUrl = url.searchParams.get('url') || '';
   const source = url.searchParams.get('source') || 'biggo-api';
   const days = Number(url.searchParams.get('days') || '3650');

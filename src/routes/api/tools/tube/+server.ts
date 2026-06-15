@@ -162,9 +162,13 @@ async function buildResult(inputs: unknown) {
   };
 }
 
-export const GET: RequestHandler = async () => json(await buildResult(DEFAULT_CHANNELS));
+export const GET: RequestHandler = async ({ setHeaders }) => {
+  setHeaders({ 'cache-control': 'no-store' });
+  return json(await buildResult(DEFAULT_CHANNELS));
+};
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, setHeaders }) => {
+  setHeaders({ 'cache-control': 'no-store' });
   try {
     const body = await request.json();
     return json(await buildResult(body.channels || body.sources || DEFAULT_CHANNELS));
