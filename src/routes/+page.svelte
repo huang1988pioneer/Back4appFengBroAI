@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Back4appPanel from '$lib/components/Back4appPanel.svelte';
-  import ModuleNav from '$lib/components/ModuleNav.svelte';
+  import AppNav from '$lib/components/AppNav.svelte';
   import RecordForm from '$lib/components/RecordForm.svelte';
   import RecordList from '$lib/components/RecordList.svelte';
   import StatsRow from '$lib/components/StatsRow.svelte';
@@ -262,37 +262,38 @@
   <meta name="description" content="鋒兄 Back4app SvelteKit CRUD workspace with CSV import and export." />
 </svelte:head>
 
-<main class="app-shell">
-  <ModuleNav
+<div class="ambient-backdrop" aria-hidden="true"></div>
+<div class="ambient-topglow" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <AppNav
     modules={menuModules}
     {activeModule}
+    activeLabel={activeSurfaceLabel}
     {toolTab}
     onSelect={selectModule}
     onToolTabChange={(tab) => (toolTab = tab)}
   />
 
-  <section class="workspace">
-    <div class="workspace-inner">
-      <header class="active-surface">
-        <div>
-          <p>Active Surface</p>
-          <strong>{activeSurfaceLabel}</strong>
-        </div>
-        <div class="surface-pills">
-          <span><small>Today</small>{todayLabel()}</span>
-          <span><small>Modules</small>{menuModules.length} 個模組</span>
-        </div>
-      </header>
-
-      <div class="surface-panel">
-        <header class="topbar">
-          <div>
-            <p class="crumb">Console View</p>
+  <div class="app-body">
+    <main class="workspace">
+      <div class="workspace-inner">
+        <header class="page-head">
+          <div class="page-head-main">
+            <p class="eyebrow">Console View · {activeSurfaceLabel}</p>
             <h2>{activeModule.title}</h2>
-            <p>{activeModule.description}</p>
+            <p class="lede">{activeModule.description}</p>
+            <div class="page-meta">
+              <span class="meta-pill"><small>Today</small>{todayLabel()}</span>
+              <span class="meta-pill"><small>Modules</small>{menuModules.length} 個模組</span>
+              {#if activeModule.id !== 'tools'}
+                <span class="meta-pill"><small>Class</small>{activeModule.className}</span>
+              {/if}
+            </div>
           </div>
+
           {#if activeModule.id !== 'tools'}
-            <div class="actions">
+            <div class="head-actions">
               <button class="secondary" type="button" on:click={() => (dbPanelOpen = !dbPanelOpen)}>
                 {isBack4appReady(dbConfig) ? 'Back4app 已啟用' : '設定 Back4app'}
               </button>
@@ -321,38 +322,46 @@
           <StatsRow {activeModule} recordCount={records.length} {totalAmount} {mode} />
 
           {#if syncMessage}
-            <pre class="notice">{syncMessage}</pre>
+            <p class="notice">{syncMessage}</p>
           {/if}
           {#if loadingRecords}
             <p class="notice">讀取資料中...</p>
           {/if}
 
-          <RecordForm bind:form {activeModule} {editingId} onSubmit={submitRecord} onCancel={cancelEdit} />
+          <div class="split">
+            <div class="records-col">
+              <section class="panel">
+                <div class="list-head">
+                  <div class="search">
+                    <input bind:value={query} placeholder={`搜尋 ${activeModule.short}`} aria-label={`搜尋 ${activeModule.short}`} />
+                  </div>
+                  <div class="compact-actions">
+                    <button class="ghost" type="button" on:click={resetSeed}>載入範例</button>
+                    <button class="danger" type="button" on:click={clearModule}>清空</button>
+                  </div>
+                </div>
 
-          <section class="list-head">
-            <div class="search">
-              <input bind:value={query} placeholder={`搜尋 ${activeModule.short}`} />
+                {#if importMessage}
+                  <p class="notice" style="margin-top:0.75rem;margin-bottom:0">{importMessage}</p>
+                {/if}
+              </section>
+
+              <RecordList
+                {activeModule}
+                records={filteredRecords}
+                onEdit={editRecord}
+                onDuplicate={duplicateRecord}
+                onDelete={deleteRecord}
+                onAdjustAmount={adjustAmount}
+              />
             </div>
-            <div class="compact-actions">
-              <button class="ghost" type="button" on:click={resetSeed}>載入範例</button>
-              <button class="danger" type="button" on:click={clearModule}>清空</button>
-            </div>
-          </section>
 
-          {#if importMessage}
-            <p class="notice">{importMessage}</p>
-          {/if}
-
-          <RecordList
-            {activeModule}
-            records={filteredRecords}
-            onEdit={editRecord}
-            onDuplicate={duplicateRecord}
-            onDelete={deleteRecord}
-            onAdjustAmount={adjustAmount}
-          />
+            <aside class="inspector" class:editing={!!editingId} aria-label="資料編輯器">
+              <RecordForm bind:form {activeModule} {editingId} onSubmit={submitRecord} onCancel={cancelEdit} />
+            </aside>
+          </div>
         {/if}
       </div>
-    </div>
-  </section>
-</main>
+    </main>
+  </div>
+</div>

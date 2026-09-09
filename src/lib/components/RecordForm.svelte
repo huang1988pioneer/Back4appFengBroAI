@@ -12,14 +12,17 @@
   }
 </script>
 
-<section class="editor">
+<section class="panel editor">
   <div class="section-title">
     <div>
       <h3>{editingId ? '編輯資料' : '新增資料'}</h3>
       <p>{editingId ? '修改後按儲存更新目前資料。' : '填入欄位後新增到目前模組。'}</p>
     </div>
     {#if editingId}
-      <button class="ghost" type="button" on:click={onCancel}>取消編輯</button>
+      <div class="inline-cluster">
+        <span class="status-chip">編輯中</span>
+        <button class="ghost" type="button" on:click={onCancel}>取消編輯</button>
+      </div>
     {/if}
   </div>
 

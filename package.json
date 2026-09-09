@@ -19,5 +19,8 @@
     "@sveltejs/adapter-auto": "^7.0.1",
     "svelte-check": "4.2.1",
     "typescript": "5.8.3"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
   }
 }

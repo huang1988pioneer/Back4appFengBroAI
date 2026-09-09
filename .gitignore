@@ -9,3 +9,6 @@ dist/
 .playwright-mcp/
 *.log
 fengbro-sveltekit-*.png
+src/app.css.bak
+src/lib/components/ModuleNav.svelte.bak
+*.bak

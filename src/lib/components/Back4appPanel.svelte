@@ -9,13 +9,13 @@
   export let onUseLocal: () => void;
 </script>
 
-<section class="db-panel">
+<section class="panel db-panel">
   <div class="section-title">
     <div>
       <h3>Back4app 資料庫</h3>
       <p>使用 Parse REST API。Class 會依模組自動使用，例如 {activeModule.className}。</p>
     </div>
-    <span class:ready={isBack4appReady(config)}>
+    <span class="status-chip" class:ready={isBack4appReady(config)}>
       {isBack4appReady(config) ? '資料庫模式' : '本機備援模式'}
     </span>
   </div>

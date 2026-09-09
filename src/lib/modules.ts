@@ -13,7 +13,7 @@ export const modules: ModuleConfig[] = [
     icon: '訂',
     description: '續訂、扣款日、帳號與幣別管理。CSV 欄位相容 appwrite-subscription。',
     csvName: 'appwrite-subscription',
-    className: 'FengbroSubscription',
+    className: 'subscription',
     fields: [
       { key: 'name', label: '名稱' },
       { key: 'site', label: '網站', type: 'url' },
@@ -54,7 +54,7 @@ export const modules: ModuleConfig[] = [
     icon: '食',
     description: '保存期限、數量、價格、店家與照片 URL，支援快速增減庫存。',
     csvName: 'appwrite-food',
-    className: 'FengbroFood',
+    className: 'food',
     fields: [
       { key: 'name', label: '名稱' },
       { key: 'amount', label: '數量', type: 'number' },
@@ -92,7 +92,7 @@ export const modules: ModuleConfig[] = [
     icon: '筆',
     description: '文章、想法、連結與附件欄位，對應 appwrite-article。',
     csvName: 'appwrite-article',
-    className: 'FengbroArticle',
+    className: 'article',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'content', label: '內容', type: 'textarea' },
@@ -128,7 +128,7 @@ export const modules: ModuleConfig[] = [
     icon: '常',
     description: '常用帳號與多組站台備註，保留 37 組 site/note 欄位。',
     csvName: 'appwrite-commonaccount',
-    className: 'FengbroCommonAccount',
+    className: 'commonaccount',
     fields: [{ key: 'name', label: '帳號名稱' }, ...commonAccountSites],
     seed: [
       {
@@ -149,7 +149,7 @@ export const modules: ModuleConfig[] = [
     icon: '圖',
     description: '圖片資產、提示詞、分類與來源。',
     csvName: 'appwrite-image',
-    className: 'FengbroImage',
+    className: 'image',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'url', label: '圖片 URL', type: 'url' },
@@ -166,7 +166,7 @@ export const modules: ModuleConfig[] = [
     icon: '影',
     description: '影片 URL、封面、分類與備註。',
     csvName: 'appwrite-video',
-    className: 'FengbroVideo',
+    className: 'video',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'url', label: '影片 URL', type: 'url' },
@@ -183,7 +183,7 @@ export const modules: ModuleConfig[] = [
     icon: '音',
     description: '音訊、歌詞、語言與來源。',
     csvName: 'appwrite-music',
-    className: 'FengbroMusic',
+    className: 'music',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'artist', label: '作者' },
@@ -200,7 +200,7 @@ export const modules: ModuleConfig[] = [
     icon: '文',
     description: '文件檔案、類型、連結與摘要。',
     csvName: 'appwrite-document',
-    className: 'FengbroDocument',
+    className: 'document',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'file', label: '檔案 URL', type: 'url' },
@@ -217,7 +217,7 @@ export const modules: ModuleConfig[] = [
     icon: '播',
     description: 'Podcast 音訊、節目、集數與逐字稿。',
     csvName: 'appwrite-podcast',
-    className: 'FengbroPodcast',
+    className: 'podcast',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'show', label: '節目' },
@@ -234,7 +234,7 @@ export const modules: ModuleConfig[] = [
     icon: '銀',
     description: '銀行、電子票證、餘額、金融卡與帳號資訊。',
     csvName: 'appwrite-bank',
-    className: 'FengbroBank',
+    className: 'bank',
     fields: [
       { key: 'name', label: '名稱' },
       { key: 'deposit', label: '餘額', type: 'number' },
@@ -278,7 +278,7 @@ export const modules: ModuleConfig[] = [
     icon: '例',
     description: '例行事項、最近日期、連結與照片。',
     csvName: 'appwrite-routine',
-    className: 'FengbroRoutine',
+    className: 'routine',
     fields: [
       { key: 'name', label: '名稱' },
       { key: 'note', label: '備註', type: 'textarea' },
@@ -307,7 +307,7 @@ export const modules: ModuleConfig[] = [
     icon: '工',
     description: '工具集合：鋒兄比價、手機比價、鋒兄Tube、鋒兄金融。',
     csvName: 'appwrite-tools',
-    className: 'FengbroTool',
+    className: 'tools',
     fields: [
       { key: 'name', label: '工具名稱' },
       { key: 'type', label: '類型' },
@@ -329,7 +329,7 @@ export const modules: ModuleConfig[] = [
     icon: '設',
     description: 'Back4app 與本機工作台設定。',
     csvName: 'appwrite-settings',
-    className: 'FengbroSetting',
+    className: 'settings',
     fields: [
       { key: 'name', label: '設定名稱' },
       { key: 'value', label: '設定值', type: 'textarea' },
@@ -344,7 +344,7 @@ export const modules: ModuleConfig[] = [
     icon: '關',
     description: '專案說明、版本紀錄與重要連結。',
     csvName: 'appwrite-about',
-    className: 'FengbroAbout',
+    className: 'about',
     fields: [
       { key: 'title', label: '標題' },
       { key: 'content', label: '內容', type: 'textarea' },

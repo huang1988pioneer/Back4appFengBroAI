@@ -2,8 +2,27 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>鋒兄 AI Appwrite SvelteKit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5" />
+    <meta name="theme-color" content="#faf9f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#262624" media="(prefers-color-scheme: dark)" />
+    <title>鋒兄 AI · Back4app Console</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('fengbro:ui-theme') || 'system';
+          var mode = stored;
+          if (mode === 'system') {
+            mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          var root = document.documentElement;
+          root.classList.remove('light', 'dark');
+          root.classList.add(mode);
+          root.dataset.themeMode = stored;
+        } catch (error) {
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

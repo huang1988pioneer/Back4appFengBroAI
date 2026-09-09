@@ -7,7 +7,7 @@
   export let mode: RepositoryMode = 'localStorage';
 </script>
 
-<section class="stats-row" aria-label="統計">
+<div class="ledger" aria-label="統計">
   <div>
     <span>資料筆數</span>
     <strong>{recordCount}</strong>
@@ -28,4 +28,4 @@
     <span>CSV 名稱</span>
     <strong>{activeModule.csvName}</strong>
   </div>
-</section>
+</div>

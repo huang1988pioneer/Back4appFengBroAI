@@ -2,6 +2,14 @@
 
 鋒兄 AI 的 SvelteKit + Back4app 工作台。介面參考 `goldshoot0720/fengbroaiappwrite`，資料模組提供 CRUD、CSV 匯入與 CSV 匯出；鋒兄工具改為使用即時 API，不再使用寫死的靜態資料。
 
+## 介面（Impeccable 2026）
+
+介面依 `goldshoot0720/fengbroaiappwrite` 重新設計：
+
+- 暖紙底 + 陶土強調色的 oklch 色票、髮絲線與淺陰影，標題使用襯線顯示字體。
+- 導覽依螢幕寬度切換：桌機（≥1024px）頂部主導覽＋工具子導覽、平板（768–1023px）左側圖示欄、手機（<768px）底部 dock 與「更多」全模組抽屜。
+- 主題切換 light / dark / 跟隨系統，選擇存在 `localStorage`（key：`fengbro:ui-theme`），並在 `app.html` 先行套用避免閃白。
+
 ## 功能
 
 - 鋒兄訂閱、食品、筆記、常用、銀行、例行、設定與關於。

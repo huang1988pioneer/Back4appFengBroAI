@@ -17,9 +17,10 @@
       <span>可以新增一筆，或匯入你現有的 Appwrite CSV。</span>
     </div>
   {:else}
-    {#each records as item}
-      <article class="record-card">
-        <div class="record-main">
+    {#each records as item, index}
+      <article class="record-row">
+        <span class="row-index">{String(index + 1).padStart(2, '0')}</span>
+        <div class="row-body">
           <div class="avatar">{activeModule.icon}</div>
           <div>
             <h3>{primaryValue(activeModule, item) || '未命名'}</h3>
@@ -30,15 +31,15 @@
           </div>
         </div>
 
-        <div class="record-side">
+        <div class="row-tools">
           {#if statusText(item)}
             <span class="status">{statusText(item)}</span>
           {/if}
           {#if activeModule.id === 'food'}
             <div class="stock">
-              <button type="button" on:click={() => onAdjustAmount(item, -1)}>-</button>
+              <button type="button" aria-label="減少庫存" on:click={() => onAdjustAmount(item, -1)}>-</button>
               <strong>{item.amount}</strong>
-              <button type="button" on:click={() => onAdjustAmount(item, 1)}>+</button>
+              <button type="button" aria-label="增加庫存" on:click={() => onAdjustAmount(item, 1)}>+</button>
             </div>
           {/if}
           <div class="row-actions">
